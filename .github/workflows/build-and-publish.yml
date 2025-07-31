@@ -4,7 +4,7 @@ on:
   push:
 
 env:
-  IMAGE_NAME: aio
+  IMAGE_NAME: gitops-deploy-server-aio
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   REGISTRY_USER: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ github.token }}

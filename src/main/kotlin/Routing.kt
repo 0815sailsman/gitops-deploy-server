@@ -16,20 +16,24 @@ fun Application.configureRouting() {
     routing {
         route("/deploy") {
             post {
+                log.info("Request arrived...")
                 val signatureHeader = call.request.headers["X-Hub-Signature-256"]
                 val rawPayload = call.receiveChannel().toByteArray()
 
                 if (!HmacVerifier.isValidSha256Signature(rawPayload, signatureHeader, webhookSecret)) {
+                    log.info("Invalid signature")
                     call.respond(HttpStatusCode.Unauthorized, "Invalid signature")
                     return@post
                 }
 
                 val event = call.request.headers["X-GitHub-Event"]
                 if (event != "push") {
+                    log.info("Invalid event")
                     call.respond(HttpStatusCode.OK, "Ignored event: $event")
                     return@post
                 }
 
+                log.info("Calling deploy script...")
                 val process = ProcessBuilder("./deploy.sh")
                     .directory(File(environment.config.property("gitops.environment_repo_directory").getString()))
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
@@ -37,10 +41,13 @@ fun Application.configureRouting() {
                     .start()
 
                 val exitCode = process.waitFor()
+                log.info("Script retuned")
 
                 if (exitCode == 0) {
+                    log.info("Deploy successful")
                     call.respond(HttpStatusCode.OK, "Deploy successful")
                 } else {
+                    log.info("Failed")
                     call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
                 }
             }
