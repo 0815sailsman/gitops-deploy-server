@@ -6,5 +6,5 @@ ktor:
     port: 8080
 
 gitops:
-  deploy_command: $DEPLOY_COMMAND
   environment_repo_directory: $WORKING_DIR
+  webhook_secret: $WEBHOOK_SECRET
