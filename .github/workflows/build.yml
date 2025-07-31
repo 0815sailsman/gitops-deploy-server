@@ -1,0 +1,29 @@
+name: "Build"
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  JAVA_VERSION: 21
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        run: ./gradlew clean buildFatJar
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitops-deploy-server-all
+          path: build/libs/gitops-deploy-server-all.jar
