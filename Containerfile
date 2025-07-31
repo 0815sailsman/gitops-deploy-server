@@ -2,7 +2,7 @@
 FROM alpine:latest as builder
 RUN apk add --no-cache openjdk21-jdk binutils zstd dos2unix
 
-ENV MODULES="java.base,java.logging"
+ENV MODULES="java.base,java.logging,java.management,java.instrument,jdk.unsupported,java.xml,java.naming"
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 
 RUN jlink \
