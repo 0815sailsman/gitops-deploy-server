@@ -25,7 +25,7 @@ RUN dos2unix /entrypoint.sh
 # -------- Stage 2: Final image --------
 FROM alpine:latest
 
-RUN apk add --no-cache zstd
+RUN apk add --no-cache zstd bash
 COPY --from=builder /opt/jre-minimal.tar.zst /opt/jre-minimal.tar.zst
 
 WORKDIR /app

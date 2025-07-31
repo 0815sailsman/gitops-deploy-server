@@ -3,7 +3,7 @@ ktor:
     modules:
       - software.say.ApplicationKt.module
   deployment:
-    port: 8080
+    port: $PORT
 
 gitops:
   environment_repo_directory: $WORKING_DIR
