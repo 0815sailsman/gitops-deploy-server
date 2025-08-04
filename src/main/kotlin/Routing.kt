@@ -35,7 +35,7 @@ fun Application.configureRouting() {
 
                 log.info("Calling deploy script...")
                 val process = ProcessBuilder("./deploy.sh")
-                    .directory(File(environment.config.property("gitops.environment_repo_directory").getString()))
+                    .directory(File("/"))
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start()

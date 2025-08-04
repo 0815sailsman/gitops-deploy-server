@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  gitops-deploy-server:
+    image: ghcr.io/0815sailsman/gitops-deploy-server-aio:latest
+    container_name: gitops-deploy-server
+    env_file:
+      - podman-compose.env
+    ports:
+      - "1337:8080"
+    volumes:
+      - /run/user/1000/podman/podman.sock:/run/podman/podman.sock
+      - ~/turing-environment:/env-repo
+    environment:
+      - XDG_RUNTIME_DIR=/run/user/1000

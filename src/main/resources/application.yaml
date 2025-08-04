@@ -3,8 +3,7 @@ ktor:
     modules:
       - software.say.ApplicationKt.module
   deployment:
-    port: $PORT
+    port: 8080
 
 gitops:
-  environment_repo_directory: $WORKING_DIR
   webhook_secret: $WEBHOOK_SECRET

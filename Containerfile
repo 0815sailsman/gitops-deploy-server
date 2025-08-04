@@ -1,6 +1,6 @@
 # -------- Stage 1: Build minimal JRE --------
 FROM alpine:latest as builder
-RUN apk add --no-cache openjdk21-jdk binutils zstd dos2unix
+RUN apk add --no-cache openjdk21-jdk binutils zstd
 
 ENV MODULES="java.base,java.logging,java.management,java.instrument,jdk.unsupported,java.xml,java.naming"
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
@@ -20,12 +20,12 @@ RUN tar -cf jre-minimal.tar jre-minimal
 RUN zstd --ultra -22 /opt/jre-minimal.tar
 
 COPY ./misc/entrypoint.sh /entrypoint.sh
-RUN dos2unix /entrypoint.sh
+COPY ./misc/deploy.sh /deploy.sh
 
 # -------- Stage 2: Final image --------
 FROM alpine:latest
 
-RUN apk add --no-cache zstd bash
+RUN apk add --no-cache zstd bash podman-remote podman-compose git coreutils
 COPY --from=builder /opt/jre-minimal.tar.zst /opt/jre-minimal.tar.zst
 
 WORKDIR /app
@@ -34,7 +34,9 @@ ENV PATH="$PATH:$JAVA_HOME/bin"
 
 COPY ./build/libs/gitops-deploy-server-all.jar /app/app.jar
 COPY --from=builder /entrypoint.sh /entrypoint.sh
+COPY --from=builder /deploy.sh /deploy.sh
 RUN chmod +x /entrypoint.sh
+RUN chmod +x /deploy.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/entrypoint.sh"]
