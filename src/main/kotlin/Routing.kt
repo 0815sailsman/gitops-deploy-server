@@ -14,7 +14,7 @@ fun Application.configureRouting() {
     val webhookSecret = environment.config.property("gitops.webhook_secret").getString() ?: error("Missing WEBHOOK_SECRET")
 
     routing {
-        route("/deploy") {
+        route("/deploy-all-changed") {
             post {
                 log.info("Request arrived...")
                 val signatureHeader = call.request.headers["X-Hub-Signature-256"]
@@ -34,7 +34,7 @@ fun Application.configureRouting() {
                 }
 
                 log.info("Calling deploy script...")
-                val process = ProcessBuilder("./deploy.sh")
+                val process = ProcessBuilder("./deploy-all-changed.sh")
                     .directory(File("/"))
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                     .redirectError(ProcessBuilder.Redirect.INHERIT)

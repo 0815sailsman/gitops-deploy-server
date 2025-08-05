@@ -20,7 +20,7 @@ RUN tar -cf jre-minimal.tar jre-minimal
 RUN zstd --ultra -22 /opt/jre-minimal.tar
 
 COPY ./misc/entrypoint.sh /entrypoint.sh
-COPY ./misc/deploy.sh /deploy.sh
+COPY ./misc/deploy-all-changed.sh /deploy-all-changed.sh
 
 # -------- Stage 2: Final image --------
 FROM alpine:latest
@@ -34,9 +34,9 @@ ENV PATH="$PATH:$JAVA_HOME/bin"
 
 COPY ./build/libs/gitops-deploy-server-all.jar /app/app.jar
 COPY --from=builder /entrypoint.sh /entrypoint.sh
-COPY --from=builder /deploy.sh /deploy.sh
+COPY --from=builder /deploy-all-changed.sh /deploy-all-changed.sh
 RUN chmod +x /entrypoint.sh
-RUN chmod +x /deploy.sh
+RUN chmod +x /deploy-all-changed.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/entrypoint.sh"]
