@@ -7,8 +7,6 @@ The deploy script determines which services have changed by computing the hash o
 
 See https://github.com/0815Sailsman/turing-environment for an example env repo and corresponding deploy.sh
 
-The webserver has a single endpoint /deploy, that executes a deploy.sh in your configured environment repository.
-
 ## Setup
 Make sure you have enabled the Podman API Socket on the host ([learn more](https://github.com/containers/podman/blob/main/docs/tutorials/socket_activation.md)):
 
@@ -22,6 +20,12 @@ todo
 ```
 or use the [provided compose file](podman-compose.yml).
 
+## Endpoints
+
+The webserver has two endpoints:
+ - /deploy-all-changed: deploys all services in your configured environment repository that have changed since the last deploy (hash of compose and env files changed)
+ - /redeploy-and-update/SERVICE_NAME: updates a single service, pulling the latest image and restarting it
+   
 ## Architecture
 This application is intended to be deployed as a container itself using podman. The provided compose file forwards the hosts podman API socket
 to the container, which is then used by the deploy script to remotely control the hosts podman.

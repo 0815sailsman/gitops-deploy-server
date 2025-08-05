@@ -16,7 +16,46 @@ fun Application.configureRouting() {
     routing {
         route("/deploy-all-changed") {
             post {
-                log.info("Request arrived...")
+                log.info("Request to deploy all changes arrived...")
+                val signatureHeader = call.request.headers["X-Hub-Signature-256"]
+                val rawPayload = call.receiveChannel().toByteArray()
+
+                if (!HmacVerifier.isValidSha256Signature(rawPayload, signatureHeader, webhookSecret)) {
+                    log.info("Invalid signature")
+                    call.respond(HttpStatusCode.Unauthorized, "Invalid signature")
+                    return@post
+                }
+
+                val event = call.request.headers["X-GitHub-Event"]
+                if (event != "push") {
+                    log.info("Invalid event")
+                    call.respond(HttpStatusCode.OK, "Ignored event: $event")
+                    return@post
+                }
+
+                log.info("Calling deploy-all-changed script...")
+                val process = ProcessBuilder("./deploy-all-changed.sh")
+                    .directory(File("/"))
+                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start()
+
+                val exitCode = process.waitFor()
+                log.info("Script returned")
+
+                if (exitCode == 0) {
+                    log.info("Deploy successful")
+                    call.respond(HttpStatusCode.OK, "Deploy successful")
+                } else {
+                    log.info("Failed")
+                    call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
+                }
+            }
+        }
+
+        route("/redeploy-and-update/{service-name}") {
+            post {
+                log.info("Request to re-deploy and update single arrived...")
                 val signatureHeader = call.request.headers["X-Hub-Signature-256"]
                 val rawPayload = call.receiveChannel().toByteArray()
 
@@ -34,18 +73,18 @@ fun Application.configureRouting() {
                 }
 
                 log.info("Calling deploy script...")
-                val process = ProcessBuilder("./deploy-all-changed.sh")
+                val process = ProcessBuilder("./redeploy-and-update.sh", call.parameters["service-name"])
                     .directory(File("/"))
                     .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start()
 
                 val exitCode = process.waitFor()
-                log.info("Script retuned")
+                log.info("Script returned")
 
                 if (exitCode == 0) {
-                    log.info("Deploy successful")
-                    call.respond(HttpStatusCode.OK, "Deploy successful")
+                    log.info("Deploy of single service successful")
+                    call.respond(HttpStatusCode.OK, "Deploy of single service successful")
                 } else {
                     log.info("Failed")
                     call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
