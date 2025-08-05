@@ -2,7 +2,7 @@
 set -e
 
 # Export CONTAINER_HOST for podman-compose to use remote connection
-export CONTAINER_HOST=unix:///run/user/1000/podman/podman.sock
+export CONTAINER_HOST=unix:///run/podman/podman.sock
 
 echo "[GitOps] Switching to env-repo..."
 cd /env-repo
@@ -13,7 +13,7 @@ git pull
 # Set up podman remote connection if not already done
 if ! podman system connection exists host 2>/dev/null; then
     echo "[GitOps] Setting up podman remote connection..."
-    podman system connection add host unix:///run/user/1000/podman/podman.sock
+    podman system connection add host $CONTAINER_HOST
     podman system connection default host
 fi
 
