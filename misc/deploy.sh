@@ -32,7 +32,7 @@ for dir in services/*; do
   pushd "$dir" >/dev/null
 
   # Build hash from compose + env + any config
-  CURRENT_HASH=$(cat podman-compose.yml .env 2>/dev/null | sha256sum | awk '{print $1}')
+  CURRENT_HASH=$(cat podman-compose.yml .env .podman-compose.env 2>/dev/null | sha256sum | awk '{print $1}')
   LAST_HASH_FILE=".last-deploy-hash"
 
   if [[ ! -f "$LAST_HASH_FILE" ]] || [[ "$CURRENT_HASH" != "$(cat $LAST_HASH_FILE)" ]]; then
