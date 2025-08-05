@@ -32,3 +32,10 @@ to the container, which is then used by the deploy script to remotely control th
 
 ## Auth
 todo
+
+## Known issues
+calling the redeploy single endpoint gives the following warning:
+```
+level=warning msg="\"/run/user/1000\" directory set by $XDG_RUNTIME_DIR does not exist. Either create the directory or unset $XDG_RUNTIME_DIR.: faccessat /run/user/1000: no such file or directory: Trying to pull image in the event that it is a public image."
+```
+but everything still works.
