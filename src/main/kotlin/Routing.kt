@@ -14,6 +14,14 @@ fun Application.configureRouting() {
     val webhookSecret = environment.config.property("gitops.webhook_secret").getString() ?: error("Missing WEBHOOK_SECRET")
 
     routing {
+        route("/health") {
+            get {
+                log.info("Health check request received")
+                call.respond(HttpStatusCode.OK, "OK")
+            }
+
+        }
+
         route("/deploy-all-changed") {
             post {
                 log.info("Request to deploy all changes arrived...")

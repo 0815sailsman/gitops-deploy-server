@@ -7,7 +7,7 @@ services:
     env_file:
       - podman-compose.env
     ports:
-      - "1337:8080"
+      - "${HOST_PORT:-1337}:8080"
     volumes:
       - /run/user/${UID}/podman/podman.sock:/run/podman/podman.sock
       - ${ENV_REPO_ON_HOST}:/env-repo
