@@ -80,7 +80,6 @@ else
       NEXT_INSTANCE="A"
     fi
 
-    CURRENT_CONTAINER="${APP_NAME}-${CURRENT_INSTANCE}"
     NEXT_CONTAINER="${APP_NAME}-${NEXT_INSTANCE}"
 
     if [[ "$NEXT_INSTANCE" == "A" ]]; then
