@@ -1,12 +1,15 @@
 package software.say
 
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.request.receiveChannel
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import java.io.File
 
 fun Application.configureRouting() {
@@ -26,7 +29,7 @@ fun Application.configureRouting() {
             post {
                 log.info("Request to deploy all changes arrived...")
                 val signatureHeader = call.request.headers["X-Hub-Signature-256"]
-                val rawPayload = call.receiveChannel().toByteArray()
+                val rawPayload = call.receive<ByteArray>()
 
                 if (!HmacVerifier.isValidSha256Signature(rawPayload, signatureHeader, webhookSecret)) {
                     log.info("Invalid signature")
@@ -35,28 +38,36 @@ fun Application.configureRouting() {
                 }
 
                 val event = call.request.headers["X-GitHub-Event"]
-                if (event != "push") {
+                if (event != "registry_package") {
                     log.info("Invalid event")
                     call.respond(HttpStatusCode.OK, "Ignored event: $event")
                     return@post
                 }
 
-                log.info("Calling deploy-all-changed script...")
-                val process = ProcessBuilder("./deploy-all-changed.sh")
-                    .directory(File("/"))
-                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
-                    .start()
+                val text = String(rawPayload, Charsets.UTF_8)
+                val jsonBody = Json.decodeFromString(text) as JsonObject
 
-                val exitCode = process.waitFor()
-                log.info("Script returned")
+                log.info("action ${(jsonBody["action"] as JsonPrimitive)}")
+                if ((jsonBody["action"] as JsonPrimitive).content == "published") {
+                    val process = ProcessBuilder("./deploy-all-changed.sh")
+                        .directory(File("/"))
+                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                        .redirectError(ProcessBuilder.Redirect.INHERIT)
+                        .start()
 
-                if (exitCode == 0) {
-                    log.info("Deploy successful")
-                    call.respond(HttpStatusCode.OK, "Deploy successful")
+                    val exitCode = process.waitFor()
+                    log.info("Script returned")
+
+                    if (exitCode == 0) {
+                        log.info("Deploy successful")
+                        call.respond(HttpStatusCode.OK, "Deploy successful")
+                    } else {
+                        log.info("Failed")
+                        call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
+                    }
                 } else {
-                    log.info("Failed")
-                    call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
+                    log.info("Updates are not considered here...")
+                    call.respond(HttpStatusCode.OK, "Did not do anything because actions was not 'published'")
                 }
             }
         }
@@ -65,7 +76,7 @@ fun Application.configureRouting() {
             post {
                 log.info("Request to re-deploy and update single arrived...")
                 val signatureHeader = call.request.headers["X-Hub-Signature-256"]
-                val rawPayload = call.receiveChannel().toByteArray()
+                val rawPayload = call.receive<ByteArray>()
 
                 if (!HmacVerifier.isValidSha256Signature(rawPayload, signatureHeader, webhookSecret)) {
                     log.info("Invalid signature")
@@ -74,28 +85,37 @@ fun Application.configureRouting() {
                 }
 
                 val event = call.request.headers["X-GitHub-Event"]
-                if (event != "push") {
+                if (event != "registry_package") {
                     log.info("Invalid event")
                     call.respond(HttpStatusCode.OK, "Ignored event: $event")
                     return@post
                 }
 
-                log.info("Calling deploy script...")
-                val process = ProcessBuilder("./redeploy-and-update.sh", call.parameters["service-name"])
-                    .directory(File("/"))
-                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
-                    .start()
+                val text = String(rawPayload, Charsets.UTF_8)
+                val jsonBody = Json.decodeFromString(text) as JsonObject
 
-                val exitCode = process.waitFor()
-                log.info("Script returned")
+                log.info("action ${(jsonBody["action"] as JsonPrimitive)}")
+                if ((jsonBody["action"] as JsonPrimitive).content == "published") {
+                    log.info("Calling deploy script...")
+                    val process = ProcessBuilder("./redeploy-and-update.sh", call.parameters["service-name"])
+                        .directory(File("/"))
+                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                        .redirectError(ProcessBuilder.Redirect.INHERIT)
+                        .start()
 
-                if (exitCode == 0) {
-                    log.info("Deploy of single service successful")
-                    call.respond(HttpStatusCode.OK, "Deploy of single service successful")
+                    val exitCode = process.waitFor()
+                    log.info("Script returned")
+
+                    if (exitCode == 0) {
+                        log.info("Deploy of single service successful")
+                        call.respond(HttpStatusCode.OK, "Deploy of single service successful")
+                    } else {
+                        log.info("Failed")
+                        call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
+                    }
                 } else {
-                    log.info("Failed")
-                    call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
+                    log.info("Updates are not considered here...")
+                    call.respond(HttpStatusCode.OK, "Did not do anything because actions was not 'published'")
                 }
             }
         }

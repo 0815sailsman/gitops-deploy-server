@@ -32,7 +32,9 @@ fi
 echo "[GitOps] Switching to desired service: $1"
 pushd "$SERVICE_DIR" >/dev/null || exit 1
 
-if [[ "$SERVICE_DIR" == "gitops-deploy-server" ]]; then
+if [[ "$SERVICE_DIR" == "services/gitops-deploy-server" ]]; then
+  INSTANCE_FILE=".active-instance"
+  APP_NAME="gitops-deploy-server"
   echo "Special handling for gitops deploy server"
   CURRENT_HASH=$(cat podman-compose.yml .env 2>/dev/null | sha256sum | awk '{print $1}')
     LAST_HASH_FILE=".last-deploy-hash"
@@ -71,13 +73,11 @@ if [[ "$SERVICE_DIR" == "gitops-deploy-server" ]]; then
       echo "[GitOps] → No changes. Skipping $APP_NAME."
     fi
 else
-  export HOST_PORT=1338
+  echo "[GitOps] Restarting and updating desired service: $1"
+  podman-compose down
+  podman-compose pull
+  podman-compose up -d
 fi
-
-echo "[GitOps] Restarting and updating desired service: $1"
-podman-compose down
-podman-compose pull
-podman-compose up -d
 
 popd >/dev/null || exit 1
 
