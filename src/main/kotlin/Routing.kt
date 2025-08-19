@@ -43,15 +43,15 @@ fun Application.configureRouting() {
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start()
 
+                call.respond(HttpStatusCode.OK, "Deploy triggered...")
+
                 val exitCode = process.waitFor()
                 log.info("Script returned")
 
                 if (exitCode == 0) {
                     log.info("Deploy successful")
-                    call.respond(HttpStatusCode.OK, "Deploy successful")
                 } else {
-                    log.info("Failed")
-                    call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
+                    log.info("Deploy Failed")
                 }
             }
         }
@@ -80,15 +80,15 @@ fun Application.configureRouting() {
                         .redirectError(ProcessBuilder.Redirect.INHERIT)
                         .start()
 
+                    call.respond(HttpStatusCode.OK, "Deploy of single service triggered")
+
                     val exitCode = process.waitFor()
                     log.info("Script returned")
 
                     if (exitCode == 0) {
                         log.info("Deploy of single service successful")
-                        call.respond(HttpStatusCode.OK, "Deploy of single service successful")
                     } else {
                         log.info("Failed")
-                        call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
                     }
                 } else {
                     log.info("Updates are not considered here...")
