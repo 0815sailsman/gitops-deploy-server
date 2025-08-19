@@ -37,46 +37,46 @@ if [[ "$SERVICE_DIR" == "services/gitops-deploy-server" ]]; then
   APP_NAME="gitops-deploy-server"
   echo "Special handling for gitops deploy server"
   CURRENT_HASH=$(cat podman-compose.yml .env 2>/dev/null | sha256sum | awk '{print $1}')
-    LAST_HASH_FILE=".last-deploy-hash"
+  LAST_HASH_FILE=".last-deploy-hash"
 
-    if [[ ! -f "$LAST_HASH_FILE" ]] || [[ "$CURRENT_HASH" != "$(cat $LAST_HASH_FILE)" ]]; then
-      echo "[GitOps] → Changes detected. Performing A/B self-update..."
+  echo "[GitOps] Performing A/B self-update..."
 
-      # Determine current and next instance
-      if [[ -f "$INSTANCE_FILE" ]]; then
-        CURRENT_INSTANCE=$(cat "$INSTANCE_FILE")
-      else
-        CURRENT_INSTANCE="A"
-      fi
-      if [[ "$CURRENT_INSTANCE" == "A" ]]; then
-        NEXT_INSTANCE="B"
-      else
-        NEXT_INSTANCE="A"
-      fi
+  # Determine current and next instance
+  if [[ -f "$INSTANCE_FILE" ]]; then
+    CURRENT_INSTANCE=$(cat "$INSTANCE_FILE")
+  else
+    CURRENT_INSTANCE="A"
+  fi
+  if [[ "$CURRENT_INSTANCE" == "A" ]]; then
+    NEXT_INSTANCE="B"
+  else
+    NEXT_INSTANCE="A"
+  fi
 
-      NEXT_CONTAINER="${APP_NAME}-${NEXT_INSTANCE}"
+  NEXT_CONTAINER="${APP_NAME}-${NEXT_INSTANCE}"
 
-      if [[ "$NEXT_INSTANCE" == "A" ]]; then
-        export HOST_PORT=1337
-      else
-        export HOST_PORT=1338
-      fi
+  if [[ "$NEXT_INSTANCE" == "A" ]]; then
+    export HOST_PORT=1337
+  else
+    export HOST_PORT=1338
+  fi
 
-      # Update active instance file and hash
-      echo "$NEXT_INSTANCE" > "$INSTANCE_FILE"
-      echo "$CURRENT_HASH" > "$LAST_HASH_FILE"
+  # Update active instance file and hash
+  echo "$NEXT_INSTANCE" > "$INSTANCE_FILE"
+  echo "$CURRENT_HASH" > "$LAST_HASH_FILE"
 
-      # Start new instance
-      echo "[GitOps] Starting new instance: $NEXT_CONTAINER"
-      podman-compose -p "$NEXT_CONTAINER" up -d
-    else
-      echo "[GitOps] → No changes. Skipping $APP_NAME."
-    fi
+  # Start new instance
+  echo "[GitOps] Starting new instance: $NEXT_CONTAINER"
+  podman-compose -p "$NEXT_CONTAINER" up -d
 else
   echo "[GitOps] Restarting and updating desired service: $1"
+  CURRENT_HASH=$(cat podman-compose.yml .env 2>/dev/null | sha256sum | awk '{print $1}')
+  LAST_HASH_FILE=".last-deploy-hash"
   podman-compose down
   podman-compose pull
   podman-compose up -d
+
+  echo "$CURRENT_HASH" > "$LAST_HASH_FILE"
 fi
 
 popd >/dev/null || exit 1
