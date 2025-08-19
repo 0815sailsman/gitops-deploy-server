@@ -37,37 +37,21 @@ fun Application.configureRouting() {
                     return@post
                 }
 
-                val event = call.request.headers["X-GitHub-Event"]
-                if (event != "registry_package") {
-                    log.info("Invalid event")
-                    call.respond(HttpStatusCode.OK, "Ignored event: $event")
-                    return@post
-                }
+                val process = ProcessBuilder("./deploy-all-changed.sh")
+                    .directory(File("/"))
+                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .start()
 
-                val text = String(rawPayload, Charsets.UTF_8)
-                val jsonBody = Json.decodeFromString(text) as JsonObject
+                val exitCode = process.waitFor()
+                log.info("Script returned")
 
-                log.info("action ${(jsonBody["action"] as JsonPrimitive)}")
-                if ((jsonBody["action"] as JsonPrimitive).content == "published") {
-                    val process = ProcessBuilder("./deploy-all-changed.sh")
-                        .directory(File("/"))
-                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                        .redirectError(ProcessBuilder.Redirect.INHERIT)
-                        .start()
-
-                    val exitCode = process.waitFor()
-                    log.info("Script returned")
-
-                    if (exitCode == 0) {
-                        log.info("Deploy successful")
-                        call.respond(HttpStatusCode.OK, "Deploy successful")
-                    } else {
-                        log.info("Failed")
-                        call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
-                    }
+                if (exitCode == 0) {
+                    log.info("Deploy successful")
+                    call.respond(HttpStatusCode.OK, "Deploy successful")
                 } else {
-                    log.info("Updates are not considered here...")
-                    call.respond(HttpStatusCode.OK, "Did not do anything because actions was not 'published'")
+                    log.info("Failed")
+                    call.respond(HttpStatusCode.InternalServerError, "Deploy failed with code $exitCode")
                 }
             }
         }
@@ -81,13 +65,6 @@ fun Application.configureRouting() {
                 if (!HmacVerifier.isValidSha256Signature(rawPayload, signatureHeader, webhookSecret)) {
                     log.info("Invalid signature")
                     call.respond(HttpStatusCode.Unauthorized, "Invalid signature")
-                    return@post
-                }
-
-                val event = call.request.headers["X-GitHub-Event"]
-                if (event != "registry_package") {
-                    log.info("Invalid event")
-                    call.respond(HttpStatusCode.OK, "Ignored event: $event")
                     return@post
                 }
 
