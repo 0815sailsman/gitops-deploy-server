@@ -3,13 +3,13 @@ version: "3.8"
 services:
   gitops-deploy-server:
     image: ghcr.io/0815sailsman/gitops-deploy-server-aio:latest
-    container_name: gitops-deploy-server
     env_file:
       - podman-compose.env
+      - ../../secrets/gitops-deploy-server.env
     ports:
       - "${HOST_PORT:-1337}:8080"
     volumes:
-      - /run/user/${UID}/podman/podman.sock:/run/podman/podman.sock
-      - ${ENV_REPO_ON_HOST}:/env-repo
+      - /run/user/YOURUSERID/podman/podman.sock:/run/podman/podman.sock
+      - /home/YOURUSER/YOUR_ENV_REPO:/env-repo
     environment:
-      - XDG_RUNTIME_DIR=/run/user/${UID}
+      - XDG_RUNTIME_DIR=/run/user/YOURUSERID
