@@ -12,5 +12,5 @@ services:
       - /run/user/YOURUSERID/podman/podman.sock:/run/podman/podman.sock
       - /home/YOURUSER/YOUR_ENV_REPO:/env-repo
     environment:
-      - XDG_RUNTIME_DIR=/run/user/YOURUSERID
+      - XDG_RUNTIME_DIR=/tmp/run/user/YOURUSERID
       - GHCR_USER=0815sailsman

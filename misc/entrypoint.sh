@@ -1,6 +1,7 @@
 #!/bin/bash
 set -x
 
+mkdir -p "$XDG_RUNTIME_DIR"
 export CONTAINER_HOST=unix:///run/podman/podman.sock
 
 # Step 1: Check and enter the directory
