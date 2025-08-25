@@ -82,3 +82,22 @@ jobs:
           if [ "${{ github.ref_name }}" == "main" ]; then
             podman push ${{ env.IMAGE_NAME }}:upload ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           fi
+
+  notify:
+    name: "Notify CD server"
+    runs-on: ubuntu-latest
+    needs: [upload]
+    steps:
+      - name: Install Curl
+        run: sudo apt-get install -y curl
+      - name: Trigger GitOps deploy webhook
+        env:
+          WEBHOOK_SECRET: ${{ secrets.GITOPS_WEBHOOK_SECRET }}
+        run: |
+          SIGNATURE=$(printf '{"action":"published"}' | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" | cut -d ' ' -f2)
+          
+          # Send POST request to webhook
+          curl -X POST https://gitops.say.software/redeploy-and-update/gitops-deploy-server \
+            -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+            -H "X-GitHub-Event: package" \
+            -H "Content-Type: application/json" -d '{"action":"published"}'
