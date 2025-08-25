@@ -11,6 +11,10 @@ fi
 echo "[GitOps] Switching to env-repo..."
 cd /env-repo || exit 1
 
+if [[ -f "secrets/ghcr.cred" ]]; then
+  podman login ghcr.io -u "$GHCR_USER" --password-stdin < secrets/ghcr.cred
+fi
+
 SERVICE_DIR="services/$1"
 if [[ ! -d "$SERVICE_DIR" ]]; then
   echo "[GitOps] ERROR: Service directory '$SERVICE_DIR' does not exist"

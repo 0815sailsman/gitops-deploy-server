@@ -7,6 +7,10 @@ export CONTAINER_HOST=unix:///run/podman/podman.sock
 echo "[GitOps] Switching to env-repo..."
 cd /env-repo || exit 1
 
+if [[ -f "secrets/ghcr.cred" ]]; then
+  podman login ghcr.io -u "$GHCR_USER" --password-stdin < secrets/ghcr.cred
+fi
+
 echo "[GitOps] Pulling latest changes..."
 git pull
 

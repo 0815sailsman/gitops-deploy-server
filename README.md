@@ -18,6 +18,9 @@ Make sure you have enabled the Podman API Socket on the host ([learn more](https
 Make sure you can pull your local environment repository without any user interaction, either by making it public and using HTTPS or by using a read only PAT in the remote.
 
 Mount the podman socket of your desired user into the container and set XDG_RUNTIME_DIR when running the container using the [provided compose file](podman-compose.yml).
+
+If you are running services in private ghcr registries, you will have to add a ghcr.cred file to the secrets directory of your environment repository.
+It should contain a class PAT with read packages permission. Also make sure to set the env variable GITHUB_USERNAME in the compose file.
 Disclaimer:
 I am currently managing this service through itself and that is what the compose file is set up for.
 Feel free to experiment with it yourself. If you find an an issue or build something for your setup, feel free to open a PR.
