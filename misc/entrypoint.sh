@@ -1,8 +1,7 @@
 #!/bin/bash
 set -x
 
-mkdir -p "$XDG_RUNTIME_DIR"
-export CONTAINER_HOST=unix:///run/podman/podman.sock
+export CONTAINER_HOST=unix:///run/user/1000/podman/podman.sock
 
 # Step 1: Check and enter the directory
 if [ -d "/env-repo/services/gitops-deploy-server" ]; then

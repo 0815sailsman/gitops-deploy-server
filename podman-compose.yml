@@ -9,8 +9,8 @@ services:
     ports:
       - "${HOST_PORT:-1337}:8080"
     volumes:
-      - /run/user/YOURUSERID/podman/podman.sock:/run/podman/podman.sock
+      - /run/user/YOURUSERID:/run/user/YOURUSERUID
       - /home/YOURUSER/YOUR_ENV_REPO:/env-repo
     environment:
-      - XDG_RUNTIME_DIR=/tmp/run/user/YOURUSERID
+      - XDG_RUNTIME_DIR=/run/user/YOURUSERID
       - GHCR_USER=0815sailsman

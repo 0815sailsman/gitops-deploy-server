@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 
-export CONTAINER_HOST=unix:///run/podman/podman.sock
+export CONTAINER_HOST=unix:///run/user/1000/podman/podman.sock
 
 if [[ -z "$1" ]]; then
   echo "[GitOps] ERROR: No service name provided"
@@ -10,10 +10,6 @@ fi
 
 echo "[GitOps] Switching to env-repo..."
 cd /env-repo || exit 1
-
-if [[ -f "secrets/ghcr.cred" ]]; then
-  podman login ghcr.io -u "$GHCR_USER" --password-stdin < secrets/ghcr.cred
-fi
 
 SERVICE_DIR="services/$1"
 if [[ ! -d "$SERVICE_DIR" ]]; then
@@ -31,6 +27,10 @@ echo "[GitOps] Testing podman connection..."
 if ! podman --remote info >/dev/null 2>&1; then
   echo "[GitOps] ERROR: Cannot connect to podman on host"
   exit 1
+fi
+
+if [[ -f "secrets/ghcr.cred" ]]; then
+  podman login ghcr.io -u "$GHCR_USER" --password-stdin < secrets/ghcr.cred
 fi
 
 echo "[GitOps] Switching to desired service: $1"
