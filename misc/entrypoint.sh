@@ -1,11 +1,14 @@
 #!/bin/bash
 set -x
 
+# Directory where the GitOps services are defined, can be overridden by env var GITOPS_SERVICES_DIRECTORY
+SERVICES_DIR="${GITOPS_SERVICES_DIRECTORY:-services}"
+
 export CONTAINER_HOST=unix:///run/user/1000/podman/podman.sock
 
 # Step 1: Check and enter the directory
-if [ -d "/env-repo/services/gitops-deploy-server" ]; then
-  cd /env-repo/services/gitops-deploy-server || exit 1
+if [ -d "/env-repo/$SERVICES_DIR/gitops-deploy-server" ]; then
+  cd /env-repo/$SERVICES_DIR/gitops-deploy-server || exit 1
 
   # Step 2: Determine active and inactive instance
   if [ -f ".active-instance" ]; then
