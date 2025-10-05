@@ -1,6 +1,9 @@
 #!/bin/bash
 set -x
 
+# Directory where the GitOps services are defined, can be overridden by env var GITOPS_SERVICES_DIRECTORY
+SERVICES_DIR="${GITOPS_SERVICES_DIRECTORY:-services}"
+
 # Export CONTAINER_HOST for podman-compose to use remote connection
 export CONTAINER_HOST=unix:///run/user/1000/podman/podman.sock
 
@@ -30,7 +33,7 @@ if [[ -f "secrets/ghcr.cred" ]]; then
 fi
 
 # Process all services except gitops-deploy-server
-for dir in services/*; do
+for dir in "$SERVICES_DIR"/*; do
   svc_name=$(basename "$dir")
   if [[ "$svc_name" == "gitops-deploy-server" ]]; then
     continue
@@ -56,7 +59,7 @@ for dir in services/*; do
 done
 
 # --- Special handling for gitops-deploy-server (A/B self-update) ---
-GITOPS_DIR="services/gitops-deploy-server"
+GITOPS_DIR="$SERVICES_DIR/gitops-deploy-server"
 if [[ ! -d "$GITOPS_DIR" ]]; then
   echo "[GitOps] Skipping $GITOPS_DIR: directory does not exist."
 else
