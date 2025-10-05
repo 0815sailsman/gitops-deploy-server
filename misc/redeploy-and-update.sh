@@ -1,6 +1,9 @@
 #!/bin/bash
 set -x
 
+# Directory where the GitOps services are defined, can be overridden by env var GITOPS_SERVICES_DIRECTORY
+SERVICES_DIR="${GITOPS_SERVICES_DIRECTORY:-services}"
+
 export CONTAINER_HOST=unix:///run/user/1000/podman/podman.sock
 
 if [[ -z "$1" ]]; then
@@ -11,7 +14,7 @@ fi
 echo "[GitOps] Switching to env-repo..."
 cd /env-repo || exit 1
 
-SERVICE_DIR="services/$1"
+SERVICE_DIR="$SERVICES_DIR/$1"
 if [[ ! -d "$SERVICE_DIR" ]]; then
   echo "[GitOps] ERROR: Service directory '$SERVICE_DIR' does not exist"
   exit 1
@@ -51,7 +54,7 @@ fi
 echo "[GitOps] Switching to desired service: $1"
 pushd "$SERVICE_DIR" >/dev/null || exit 1
 
-if [[ "$SERVICE_DIR" == "services/gitops-deploy-server" ]]; then
+if [[ "$SERVICE_DIR" == "$SERVICES_DIR/gitops-deploy-server" ]]; then
   INSTANCE_FILE=".active-instance"
   APP_NAME="gitops-deploy-server"
   echo "Special handling for gitops deploy server"
