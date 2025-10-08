@@ -26,7 +26,8 @@ COPY ./misc/redeploy-and-update.sh /redeploy-and-update.sh
 # -------- Stage 2: Final image --------
 FROM alpine:latest
 
-RUN apk add --no-cache zstd bash podman-remote podman-compose git coreutils
+RUN apk add --no-cache zstd bash podman-remote podman-compose git coreutils docker-cli docker-cli-compose
+
 COPY --from=builder /opt/jre-minimal.tar.zst /opt/jre-minimal.tar.zst
 
 WORKDIR /app

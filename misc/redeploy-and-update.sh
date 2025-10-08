@@ -23,10 +23,25 @@ if ! podman system connection exists host 2>/dev/null; then
   podman system connection default host
 fi
 
+# Set up Docker remote connection to the host
+if [[ -n "$CONTAINER_HOST" ]]; then
+    echo "[GitOps] Setting up Docker remote context..."
+    export DOCKER_HOST=unix:///var/run/docker.sock
+fi
+
 echo "[GitOps] Testing podman connection..."
 if ! podman --remote info >/dev/null 2>&1; then
   echo "[GitOps] ERROR: Cannot connect to podman on host"
   exit 1
+fi
+
+# Test Docker connection
+echo "[GitOps] Testing Docker connection..."
+if ! docker info >/dev/null 2>&1; then
+    echo "[GitOps] WARNING: Cannot connect to Docker on host via DOCKER_HOST."
+    echo "[GitOps] This is only an issue if you use docker-compose.yml files."
+else
+    echo "[GitOps] Docker connection successful."
 fi
 
 if [[ -f "secrets/ghcr.cred" ]]; then
@@ -73,12 +88,26 @@ if [[ "$SERVICE_DIR" == "services/gitops-deploy-server" ]]; then
   echo "[GitOps] Starting new instance: $NEXT_CONTAINER"
   podman-compose -p "$NEXT_CONTAINER" up -d
 else
+    COMPOSE_CMD=""
+    COMPOSE_FILE=""
+    ENV_FILES_TO_HASH=".env" # .env is common
+
+    # Detect which compose tool to use, preferring podman-compose
+    if [[ -f "podman-compose.yml" ]]; then
+      COMPOSE_CMD="podman-compose"
+      COMPOSE_FILE="podman-compose.yml"
+      ENV_FILES_TO_HASH=".env .podman-compose.env"
+    elif [[ -f "docker-compose.yml" ]]; then
+      COMPOSE_CMD="docker compose"
+      COMPOSE_FILE="docker-compose.yml"
+    fi
+
   echo "[GitOps] Restarting and updating desired service: $1"
-  CURRENT_HASH=$(cat podman-compose.yml .env 2>/dev/null | sha256sum | awk '{print $1}')
+  CURRENT_HASH=$(cat "$COMPOSE_FILE" "$ENV_FILES_TO_HASH" 2>/dev/null | sha256sum | awk '{print $1}')
   LAST_HASH_FILE=".last-deploy-hash"
-  podman-compose down
-  podman-compose pull
-  podman-compose up -d
+  $COMPOSE_CMD down
+  $COMPOSE_CMD pull
+  $COMPOSE_CMD up -d
 
   echo "$CURRENT_HASH" > "$LAST_HASH_FILE"
 fi

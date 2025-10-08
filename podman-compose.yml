@@ -10,6 +10,7 @@ services:
       - "${HOST_PORT:-1337}:8080"
     volumes:
       - /run/user/YOURUSERID:/run/user/YOURUSERUID
+      - /var/run/docker.sock:/var/run/docker.sock
       - /home/YOURUSER/YOUR_ENV_REPO:/env-repo
     environment:
       - XDG_RUNTIME_DIR=/run/user/YOURUSERID
