@@ -13,3 +13,4 @@ services:
     environment:
       - XDG_RUNTIME_DIR=/run/user/1000
       - GHCR_USER=0815sailsman
+      - GITOPS_SERVICES_DIRECTORY=${GITOPS_SERVICES_DIRECTORY}
