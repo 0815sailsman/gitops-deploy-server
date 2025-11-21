@@ -36,6 +36,30 @@ I will happily add it to the repo for everyone to use.
 The webserver has two endpoints (+ healthcheck):
  - /deploy-all-changed: deploys all services in your configured environment repository that have changed since the last deploy (hash of compose and env files changed)
  - /redeploy-and-update/SERVICE_NAME: updates a single service, pulling the latest image and restarting it
+
+## Testing manually
+
+First export your secret into an env var
+
+```bash
+SECRET=mysecret
+```
+
+Compute the signature
+
+```bash
+SIGNATURE=$(printf '{"action":"published"}' | openssl dgst -sha256 -hmac "$GITOPS_WEBHOOK_SECRET" | cut -d ' ' -f2)
+```
+
+and then query the app (obv. adjust the address and service name)
+
+```bash
+curl -X POST https://gitops.say.software/redeploy-and-update/twoslr \
+          -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+          -H "X-GitHub-Event: package" \
+          -H "Content-Type: application/json" \
+          -d '{"action":"published"}'
+```
    
 ## Architecture
 This application is intended to be deployed as a container itself using podman. The provided compose file forwards the hosts podman API socket
