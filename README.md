@@ -22,6 +22,7 @@ Mount the podman socket of your desired user into the container and set XDG_RUNT
 ### Secret
 You need to setup a secrets file for this, containing a `WEBHOOK_SECRET` as the preshared key. The clients also know it and sign their messages with it.
 
+### Other
 If you are running services in private ghcr registries, you will have to add a ghcr.cred file to the secrets directory of your environment repository.
 It should contain a class PAT with read packages permission. Also make sure to set the env variable GITHUB_USERNAME in the compose file.
 
