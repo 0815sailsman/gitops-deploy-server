@@ -19,10 +19,6 @@ WORKDIR /opt
 RUN tar -cf jre-minimal.tar jre-minimal
 RUN zstd --ultra -22 /opt/jre-minimal.tar
 
-COPY ./misc/entrypoint.sh /entrypoint.sh
-COPY ./misc/deploy-all-changed.sh /deploy-all-changed.sh
-COPY ./misc/redeploy-and-update.sh /redeploy-and-update.sh
-
 # -------- Stage 2: Final image --------
 FROM alpine:latest
 
@@ -34,13 +30,15 @@ WORKDIR /app
 ENV JAVA_HOME=/opt/jre-minimal
 ENV PATH="$PATH:$JAVA_HOME/bin"
 
-COPY ./build/libs/gitops-deploy-server-all.jar /app/app.jar
-COPY --from=builder /entrypoint.sh /entrypoint.sh
-COPY --from=builder /deploy-all-changed.sh /deploy-all-changed.sh
-COPY --from=builder /redeploy-and-update.sh /redeploy-and-update.sh
+COPY ./misc/entrypoint.sh /entrypoint.sh
+COPY ./misc/deploy-all-changed.sh /deploy-all-changed.sh
+COPY ./misc/redeploy-and-update.sh /redeploy-and-update.sh
+COPY ./misc/self-update.sh /self-update.sh
+COPY ./misc/updater-overrides.yml /updater-overrides.yml
+
 RUN chmod +x /entrypoint.sh
 RUN chmod +x /deploy-all-changed.sh
 RUN chmod +x /redeploy-and-update.sh
+RUN chmod +x /self-update.sh
 
-EXPOSE 8080
 ENTRYPOINT ["/entrypoint.sh"]

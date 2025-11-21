@@ -14,9 +14,9 @@ fi
 echo "[GitOps] Switching to env-repo..."
 cd /env-repo || exit 1
 
-SERVICE_DIR="$SERVICES_DIR/$1"
-if [[ ! -d "$SERVICE_DIR" ]]; then
-  echo "[GitOps] ERROR: Service directory '$SERVICE_DIR' does not exist"
+UPDATING_SERVICE_DIR="$SERVICES_DIR/$1"
+if [[ ! -d "$UPDATING_SERVICE_DIR" ]]; then
+  echo "[GitOps] ERROR: Service directory '$UPDATING_SERVICE_DIR' does not exist"
   exit 1
 fi
 
@@ -52,44 +52,11 @@ if [[ -f "secrets/ghcr.cred" ]]; then
 fi
 
 echo "[GitOps] Switching to desired service: $1"
-pushd "$SERVICE_DIR" >/dev/null || exit 1
+pushd "$UPDATING_SERVICE_DIR" >/dev/null || exit 1
 
-if [[ "$SERVICE_DIR" == "$SERVICES_DIR/${DEPLOY_SERVER_NAME:-gitops-deploy-server}" ]]; then
-  INSTANCE_FILE=".active-instance"
-  APP_NAME=${DEPLOY_SERVER_NAME:-gitops-deploy-server}
-  echo "Special handling for gitops deploy server"
-  CURRENT_HASH=$(cat podman-compose.yml .env 2>/dev/null | sha256sum | awk '{print $1}')
-  LAST_HASH_FILE=".last-deploy-hash"
-
-  echo "[GitOps] Performing A/B self-update..."
-
-  # Determine current and next instance
-  if [[ -f "$INSTANCE_FILE" ]]; then
-    CURRENT_INSTANCE=$(cat "$INSTANCE_FILE")
-  else
-    CURRENT_INSTANCE="A"
-  fi
-  if [[ "$CURRENT_INSTANCE" == "A" ]]; then
-    NEXT_INSTANCE="B"
-  else
-    NEXT_INSTANCE="A"
-  fi
-
-  NEXT_CONTAINER="${APP_NAME}-${NEXT_INSTANCE}"
-
-  if [[ "$NEXT_INSTANCE" == "A" ]]; then
-    export HOST_PORT=1337
-  else
-    export HOST_PORT=1338
-  fi
-
-  # Update active instance file and hash
-  echo "$NEXT_INSTANCE" > "$INSTANCE_FILE"
-  echo "$CURRENT_HASH" > "$LAST_HASH_FILE"
-
-  # Start new instance
-  echo "[GitOps] Starting new instance: $NEXT_CONTAINER"
-  podman-compose -p "$NEXT_CONTAINER" up -d
+if [ -f "$UPDATING_SERVICE_DIR/custom-update.sh" ]; then
+  "/env-repo/$UPDATING_SERVICE_DIR/custom-update.sh" "/env-repo/$UPDATING_SERVICE_DIR/"
+  exit
 else
     COMPOSE_CMD=""
     COMPOSE_FILE=""
