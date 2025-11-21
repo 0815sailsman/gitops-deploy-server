@@ -95,12 +95,12 @@ for dir in "$SERVICES_DIR"/*; do
 done
 
 # --- Special handling for gitops-deploy-server (A/B self-update) ---
-GITOPS_DIR="$SERVICES_DIR/gitops-deploy-server"
+GITOPS_DIR="$SERVICES_DIR/${DEPLOY_SERVER_NAME:-gitops-deploy-server}"
 if [[ ! -d "$GITOPS_DIR" ]]; then
   echo "[GitOps] Skipping $GITOPS_DIR: directory does not exist."
 else
   INSTANCE_FILE=".active-instance"
-  APP_NAME="gitops-deploy-server"
+  APP_NAME=${DEPLOY_SERVER_NAME:-gitops-deploy-server}
 
   echo "[GitOps] Checking service: $APP_NAME"
   pushd "$GITOPS_DIR" >/dev/null || exit 1

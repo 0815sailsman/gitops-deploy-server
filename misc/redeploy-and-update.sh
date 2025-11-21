@@ -54,9 +54,9 @@ fi
 echo "[GitOps] Switching to desired service: $1"
 pushd "$SERVICE_DIR" >/dev/null || exit 1
 
-if [[ "$SERVICE_DIR" == "$SERVICES_DIR/gitops-deploy-server" ]]; then
+if [[ "$SERVICE_DIR" == "$SERVICES_DIR/${DEPLOY_SERVER_NAME:-gitops-deploy-server}" ]]; then
   INSTANCE_FILE=".active-instance"
-  APP_NAME="gitops-deploy-server"
+  APP_NAME=${DEPLOY_SERVER_NAME:-gitops-deploy-server}
   echo "Special handling for gitops deploy server"
   CURRENT_HASH=$(cat podman-compose.yml .env 2>/dev/null | sha256sum | awk '{print $1}')
   LAST_HASH_FILE=".last-deploy-hash"

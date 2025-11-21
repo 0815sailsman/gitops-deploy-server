@@ -25,6 +25,7 @@ Mount the podman socket of your desired user into the container and set XDG_RUNT
  - ENV_REPO_ON_HOST: Path to the root of your environment repository
  - HOST_PORT: Port for the application
  - GITOPS_SERVICES_DIRECTORY: relative path from root of env repo to the services directory
+ - DEPLOY_SERVER_NAME: The service directory containing the gitops deploy server config
 
 ### Secret
 You need to setup a secrets file for this, containing a `WEBHOOK_SECRET` as the preshared key. The clients also know it and sign their messages with it.
